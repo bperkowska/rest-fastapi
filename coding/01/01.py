@@ -40,6 +40,13 @@ def get_items(skip: int = 0, limit: int = 10):
 # http://127.0.0.1:8000/users/10/posts?skip=15&limit=20
 @app.get("/users/{user_id}/posts")
 def get_user_posts(user_id: int, skip: int = 0, limit: int = 10):
+    """
+    Pobierz posty użytkownika
+
+    - **user_id**: ID użytkownika (path)
+    - **skip**: Ile postów pominąć (query)
+    - **limit** Maksymalna liczba postów (query)
+    """
     return {
         "user_id": user_id,
         "skip": skip,
