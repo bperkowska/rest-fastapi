@@ -1,0 +1,12 @@
+# FastAPI Production Requirements
+# ==================================
+
+# Core
+fastapi==0.115.0
+uvicorn[standard]==0.32.1  # [standard] includes uvloop, httptools
+
+# Production
+gunicorn==23.0.0           # Process manager (opcjonalnie, dla multiple workers)
+
+# Logging
+python-json-logger==2.0.7  # Structured JSON logs

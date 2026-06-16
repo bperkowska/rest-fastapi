@@ -1,0 +1,61 @@
+# ═══════════════════════════════════════════════════════════
+# .dockerignore - Pliki ignorowane podczas docker build
+# ═══════════════════════════════════════════════════════════
+#
+# Dlaczego .dockerignore?
+# - Mniejszy build context (szybszy build)
+# - Bezpieczeństwo (nie kopiuj secrets do image)
+# - Czystość (tylko potrzebne pliki w image)
+#
+# ═══════════════════════════════════════════════════════════
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+README.md
+docs/

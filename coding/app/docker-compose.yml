@@ -1,0 +1,147 @@
+# ═══════════════════════════════════════════════════════════
+# Docker Compose - Production Setup
+# ═══════════════════════════════════════════════════════════
+#
+# Architektura:
+# Internet → Nginx (port 8080) → FastAPI (port 8000)
+#
+# Uruchomienie:
+# docker compose up --build
+#
+# Zatrzymanie:
+# docker compose down
+#
+# Logi (follow):
+# docker compose logs -f
+# docker compose logs -f nginx
+# docker compose logs -f app
+#
+# Nginx status:
+# curl http://localhost:8080/nginx_status
+#
+# ═══════════════════════════════════════════════════════════
+
+version: '3.8'
+
+services:
+  # ─────────────────────────────────────────────────────────
+  # Nginx (Reverse Proxy)
+  # ─────────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: fastapi_nginx
+    ports:
+      - "8080:80"  # HTTP na porcie 8080 (80 moze być zajęty systemowo)
+    volumes:
+      # Logi na host (możesz je analizować)
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      app:
+        condition: service_healthy  # Czekaj aż FastAPI będzie ready
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  # ─────────────────────────────────────────────────────────
+  # FastAPI Application
+  # ─────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    # NIE expose portu na host! Tylko nginx ma dostęp.
+    # W produkcji app nie jest dostępny z zewnątrz.
+    expose:
+      - "8000"
+    environment:
+      # Zmienne środowiskowe (w produkcji: .env file)
+      PYTHONUNBUFFERED: 1
+    volumes:
+      # Hot reload w development (usuń w produkcji!)
+      - ./main.py:/app/main.py:ro  # :ro = read-only
+      # Logi
+      - ./logs/app:/app/logs
+    restart: unless-stopped
+    networks:
+      - app_network
+    # Resource limits (opcjonalnie, zapobiega zjedzeniu całego CPU/RAM)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'      # Max 1 CPU core
+          memory: 512M     # Max 512MB RAM
+        reservations:
+          cpus: '0.5'      # Min 0.5 CPU core
+          memory: 256M     # Min 256MB RAM
+
+# ─────────────────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────────────────
+networks:
+  app_network:
+    driver: bridge
+
+# ═══════════════════════════════════════════════════════════
+# Komendy
+# ═══════════════════════════════════════════════════════════
+#
+# Uruchom wszystko:
+# dockercompose up --build
+#
+# Uruchom w tle:
+# docker compose up -d
+#
+# Zobacz logi wszystkich serwisów:
+# docker compose logs -f
+#
+# Zobacz logi tylko nginx:
+# docker compose logs -f nginx
+#
+# Zobacz logi tylko app:
+# docker compose logs -f app
+#
+# Nginx status (aktywne połączenia, requesty):
+# curl http://localhost:8080/nginx_status
+#
+# Health check FastAPI:
+# curl http://localhost:8080/health
+#
+# Test API:
+# curl http://localhost:8080/tasks
+#
+# Zatrzymaj:
+# docker-compose down
+#
+# Restart pojedynczego serwisu:
+# docker compose restart app
+# docker compose restart nginx
+#
+# Wejdź do kontenera:
+# docker compose exec app bash
+# docker compose exec nginx sh
+#
+# Zobacz zasoby (CPU, RAM):
+# docker stats
+#
+# ═══════════════════════════════════════════════════════════
+# Production vs Development
+# ═══════════════════════════════════════════════════════════
+#
+# Development (obecny setup):
+# - ./main.py:/app/main.py - hot reload
+# - Logi w ./logs/
+# - Brak secrets (hardcoded)
+#
+# Production changes:
+# - Usuń volumes dla kodu (brak hot reload)
+# - Dodaj .env dla secrets
+# - Dodaj SSL (certbot/letsencrypt)
+# - Zwiększ workers w Dockerfile
+# - Dodaj monitoring (Prometheus/Grafana)
+# - Dodaj backup strategy
+# - Zmień CORS allow_origin na konkretną domenę
+#
+# ═══════════════════════════════════════════════════════════
